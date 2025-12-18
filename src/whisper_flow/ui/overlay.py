@@ -22,7 +22,7 @@ from AppKit import (
     NSView,
     NSWindow,
     NSWindowStyleMaskBorderless,
-    NSFloatingWindowLevel,
+    NSStatusWindowLevel,
     NSTrackingArea,
     NSTrackingMouseEnteredAndExited,
     NSTrackingActiveAlways,
@@ -199,11 +199,11 @@ class OverlayWindow:
         # Window size
         button_size = 50
 
-        # Position on right side, middle of screen
+        # Position on right side, middle of screen (use visibleFrame to avoid menu bar)
         screen = NSScreen.mainScreen()
-        screen_frame = screen.frame()
-        x = screen_frame.size.width - button_size - 20  # 20px from right edge
-        y = screen_frame.size.height / 2 - button_size / 2  # Centered vertically
+        visible_frame = screen.visibleFrame()
+        x = visible_frame.origin.x + visible_frame.size.width - button_size - 20  # 20px from right edge
+        y = visible_frame.origin.y + visible_frame.size.height / 2 - button_size / 2  # Centered vertically
 
         # Create window
         self.window = NSWindow.alloc().initWithContentRect_styleMask_backing_defer_(
@@ -214,12 +214,13 @@ class OverlayWindow:
         )
 
         # Configure window
-        self.window.setLevel_(NSFloatingWindowLevel)  # Always on top
+        self.window.setLevel_(NSStatusWindowLevel)  # Higher than floating, below screen saver
         self.window.setOpaque_(False)
         self.window.setBackgroundColor_(NSColor.clearColor())
         self.window.setHasShadow_(True)
         self.window.setMovableByWindowBackground_(True)
         self.window.setCollectionBehavior_(1 << 0)  # Can join all spaces
+        self.window.setIgnoresMouseEvents_(False)
 
         # Create button view
         self.button_view = MicButtonView.alloc().initWithFrame_(
@@ -370,8 +371,13 @@ class OverlayWindow:
         app = NSApplication.sharedApplication()
         app.setActivationPolicy_(NSApplicationActivationPolicyAccessory)
 
-        # Show window
+        # Show window and force to front
+        self.window.orderFrontRegardless()
         self.window.makeKeyAndOrderFront_(None)
+
+        # Debug: print window position
+        frame = self.window.frame()
+        print(f"Window position: x={frame.origin.x}, y={frame.origin.y}, size={frame.size.width}x{frame.size.height}")
 
         # Load model in background
         print("Loading Whisper model...")
