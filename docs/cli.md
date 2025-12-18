@@ -3,7 +3,7 @@
 ## Basic Commands
 
 ```bash
-whisper-flow [OPTIONS]
+rodin [OPTIONS]
 ```
 
 ## Mode Options
@@ -62,44 +62,44 @@ whisper-flow [OPTIONS]
 
 ```bash
 # Start with overlay
-whisper-flow
+rodin
 
 # Start in CLI mode
-whisper-flow --cli
+rodin --cli
 
 # Use a larger model
-whisper-flow --model small
+rodin --model small
 
 # Enable Ollama editing
-whisper-flow --editor ollama --preset email
+rodin --editor ollama --preset email
 ```
 
 ### Dictionary Operations
 
 ```bash
 # Add your name
-whisper-flow --add-word "james dowzard" "James Dowzard"
+rodin --add-word "james dowzard" "James Dowzard"
 
 # Add company name
-whisper-flow --add-word "jhg" "John Holland Group"
+rodin --add-word "jhg" "John Holland Group"
 
 # View dictionary
-whisper-flow --list-dictionary
+rodin --list-dictionary
 
 # Remove entry
-whisper-flow --remove-word "jhg"
+rodin --remove-word "jhg"
 ```
 
 ### Snippet Operations
 
 ```bash
 # Add email signature
-whisper-flow --add-snippet "sig" "Best regards,
+rodin --add-snippet "sig" "Best regards,
 James Dowzard
 Senior Developer"
 
 # Add meeting template
-whisper-flow --add-snippet "standup" "Yesterday:
+rodin --add-snippet "standup" "Yesterday:
 -
 
 Today:
@@ -109,42 +109,42 @@ Blockers:
 - None"
 
 # View snippets
-whisper-flow --list-snippets
+rodin --list-snippets
 
 # Remove snippet
-whisper-flow --remove-snippet "sig"
+rodin --remove-snippet "sig"
 ```
 
 ### Testing
 
 ```bash
 # List audio devices to find microphone
-whisper-flow --list-devices
+rodin --list-devices
 
 # Test 5-second recording
-whisper-flow --record-test 5
+rodin --record-test 5
 
 # Test AI editor
-whisper-flow --test "um like I was thinking we should uh update the code"
+rodin --test "um like I was thinking we should uh update the code"
 
 # Run benchmark
-whisper-flow --benchmark
+rodin --benchmark
 ```
 
 ### Configuration via CLI
 
 ```bash
 # Change model (persisted to config)
-whisper-flow --model medium
+rodin --model medium
 
 # Change mode (persisted)
-whisper-flow --mode toggle
+rodin --mode toggle
 
 # Change editor (persisted)
-whisper-flow --editor ollama
+rodin --editor ollama
 
 # Change preset (persisted)
-whisper-flow --preset email
+rodin --preset email
 ```
 
 ## Exit Codes

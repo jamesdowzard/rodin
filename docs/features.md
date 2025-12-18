@@ -4,7 +4,7 @@
 
 ### Local Speech-to-Text
 
-Whisper Flow uses [faster-whisper](https://github.com/SYSTRAN/faster-whisper), an optimised implementation of OpenAI's Whisper model.
+Rodin uses [faster-whisper](https://github.com/SYSTRAN/faster-whisper), an optimised implementation of OpenAI's Whisper model.
 
 - **100% offline** - No audio sent to the cloud
 - **Multiple model sizes** - tiny, base, small, medium, large-v3
@@ -13,10 +13,10 @@ Whisper Flow uses [faster-whisper](https://github.com/SYSTRAN/faster-whisper), a
 
 ```bash
 # Use a larger model for better accuracy
-whisper-flow --model small
+rodin --model small
 
 # Use tiny for faster results
-whisper-flow --model tiny
+rodin --model tiny
 ```
 
 ### AI Text Editing
@@ -44,10 +44,10 @@ Automatically learn and correct:
 - Common misspellings
 
 **How it works:**
-1. Add words manually: `whisper-flow --add-word "spoken" "Corrected"`
+1. Add words manually: `rodin --add-word "spoken" "Corrected"`
 2. Auto-learn from corrections (when AI editing fixes a word)
 
-**Storage:** `~/Library/Application Support/WhisperFlow/dictionary.json` (macOS)
+**Storage:** `~/Library/Application Support/Rodin/dictionary.json` (macOS)
 
 ### Snippets
 
@@ -55,8 +55,8 @@ Text expansion for frequently used phrases:
 
 ```bash
 # Add snippets
-whisper-flow --add-snippet "addr" "123 Main St, Sydney NSW 2000"
-whisper-flow --add-snippet "standup" "Yesterday:
+rodin --add-snippet "addr" "123 Main St, Sydney NSW 2000"
+rodin --add-snippet "standup" "Yesterday:
 -
 
 Today:
@@ -125,7 +125,7 @@ A small floating mic button on the right side of your screen.
 Terminal-based interface with text output.
 
 ```bash
-whisper-flow --cli
+rodin --cli
 ```
 
 ### Menu Bar Mode (macOS)
@@ -133,14 +133,14 @@ whisper-flow --cli
 System tray app with dropdown menu.
 
 ```bash
-whisper-flow --menubar
+rodin --menubar
 ```
 
 ## Transcription Logging
 
 All transcriptions are logged to:
-- **macOS:** `~/Library/Application Support/WhisperFlow/transcriptions.log`
-- **Windows:** `%LOCALAPPDATA%\WhisperFlow\transcriptions.log`
+- **macOS:** `~/Library/Application Support/Rodin/transcriptions.log`
+- **Windows:** `%LOCALAPPDATA%\Rodin\transcriptions.log`
 
 Log format:
 ```

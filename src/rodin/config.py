@@ -1,4 +1,4 @@
-"""Configuration management for Whisper Flow."""
+"""Configuration management for Rodin."""
 
 import json
 import sys
@@ -7,6 +7,12 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings
+
+
+# App info
+APP_NAME = "Rodin"
+APP_VERSION = "0.1.0"
+APP_BUNDLE_ID = "com.jamesdowzard.rodin"
 
 
 class HotkeyConfig(BaseModel):
@@ -133,11 +139,11 @@ class Settings(BaseSettings):
 def get_config_dir() -> Path:
     """Get the configuration directory."""
     if sys.platform == "darwin":
-        config_dir = Path.home() / "Library" / "Application Support" / "WhisperFlow"
+        config_dir = Path.home() / "Library" / "Application Support" / APP_NAME
     elif sys.platform == "win32":
-        config_dir = Path.home() / "AppData" / "Local" / "WhisperFlow"
+        config_dir = Path.home() / "AppData" / "Local" / APP_NAME
     else:
-        config_dir = Path.home() / ".config" / "whisper-flow"
+        config_dir = Path.home() / ".config" / "rodin"
 
     config_dir.mkdir(parents=True, exist_ok=True)
     return config_dir

@@ -2,8 +2,8 @@
 
 ## Config File Location
 
-- **macOS:** `~/Library/Application Support/WhisperFlow/config.json`
-- **Windows:** `%LOCALAPPDATA%\WhisperFlow\config.json`
+- **macOS:** `~/Library/Application Support/Rodin/config.json`
+- **Windows:** `%LOCALAPPDATA%\Rodin\config.json`
 
 ## Full Configuration Reference
 

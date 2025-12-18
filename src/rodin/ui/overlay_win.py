@@ -73,7 +73,7 @@ class OverlayWindow:
     def _create_window(self):
         """Create the floating overlay window."""
         self.root = tk.Tk()
-        self.root.title("Whisper Flow")
+        self.root.title("Rodin")
 
         # Window size
         button_size = 60
@@ -271,7 +271,7 @@ class OverlayWindow:
         # Start hotkey listener
         self.hotkey_handler.start()
 
-        print("Whisper Flow ready!")
+        print("Rodin ready!")
         print("Hotkey: Ctrl+Shift+Space (hold to talk)")
         print("Or click the mic button on the right side of your screen")
 

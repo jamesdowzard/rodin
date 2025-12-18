@@ -1,4 +1,4 @@
-"""Main entry point for Whisper Flow."""
+"""Main entry point for Rodin."""
 
 import argparse
 import sys
@@ -9,7 +9,7 @@ from .config import load_settings, save_settings
 def main() -> None:
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description="Whisper Flow - Local voice dictation with AI editing"
+        description="Rodin - Local voice dictation with AI editing"
     )
     parser.add_argument(
         "--cli",
@@ -30,6 +30,12 @@ def main() -> None:
         "--model",
         choices=["tiny", "base", "small", "medium", "large-v3"],
         help="Whisper model size",
+    )
+    parser.add_argument(
+        "--download-model",
+        choices=["tiny", "base", "small", "medium", "large-v3"],
+        metavar="SIZE",
+        help="Download a Whisper model for offline use",
     )
     parser.add_argument(
         "--mode",
@@ -99,6 +105,46 @@ def main() -> None:
         help="List all snippets",
     )
 
+    # Stats and history
+    parser.add_argument(
+        "--stats",
+        action="store_true",
+        help="Show lifetime transcription statistics",
+    )
+    parser.add_argument(
+        "--stats-today",
+        action="store_true",
+        help="Show today's transcription statistics",
+    )
+    parser.add_argument(
+        "--stats-week",
+        action="store_true",
+        help="Show this week's transcription statistics",
+    )
+    parser.add_argument(
+        "--stats-month",
+        action="store_true",
+        help="Show this month's transcription statistics",
+    )
+    parser.add_argument(
+        "--stats-year",
+        action="store_true",
+        help="Show this year's transcription statistics",
+    )
+    parser.add_argument(
+        "--history",
+        type=int,
+        nargs="?",
+        const=20,
+        metavar="N",
+        help="Show last N transcriptions (default 20)",
+    )
+    parser.add_argument(
+        "--pending",
+        action="store_true",
+        help="Show pending recordings awaiting transcription",
+    )
+
     args = parser.parse_args()
 
     # List devices and exit
@@ -110,6 +156,11 @@ def main() -> None:
         for device in devices:
             print(f"  [{device['index']}] {device['name']}")
             print(f"      Channels: {device['channels']}, Sample Rate: {device['sample_rate']}")
+        return
+
+    # Download model
+    if args.download_model:
+        download_model(args.download_model)
         return
 
     # Dictionary management commands
@@ -174,6 +225,69 @@ def main() -> None:
             print("No snippets. Add with: --add-snippet 'trigger' 'expansion text'")
         return
 
+    # Stats commands
+    if args.stats or args.stats_today or args.stats_week or args.stats_month or args.stats_year:
+        from .stats import get_db
+        db = get_db()
+
+        if args.stats_today:
+            stats = db.get_stats_today()
+            print("Today's Statistics")
+        elif args.stats_week:
+            stats = db.get_stats_this_week()
+            print("This Week's Statistics")
+        elif args.stats_month:
+            stats = db.get_stats_this_month()
+            print("This Month's Statistics")
+        elif args.stats_year:
+            stats = db.get_stats_this_year()
+            print("This Year's Statistics")
+        else:
+            stats = db.get_stats()
+            print("Lifetime Statistics")
+
+        print("=" * 40)
+        print(db.format_stats(stats))
+        return
+
+    if args.history is not None:
+        from .stats import get_db
+        db = get_db()
+        records = db.get_recent(args.history)
+        if records:
+            print(f"Last {len(records)} Transcriptions")
+            print("=" * 60)
+            for r in records:
+                time_str = r.timestamp.strftime("%Y-%m-%d %H:%M")
+                text = r.edited_text or r.raw_text
+                preview = text[:60] + ('...' if len(text) > 60 else '')
+                app = f" [{r.app_name}]" if r.app_name else ""
+                print(f"{time_str}{app}: {preview}")
+        else:
+            print("No transcription history yet.")
+        return
+
+    if args.pending:
+        from .audio_queue import get_queue
+        queue = get_queue()
+        pending = queue.get_pending()
+        if pending:
+            print(f"Pending Recordings ({len(pending)})")
+            print("=" * 40)
+            total_size = queue.get_queue_size_bytes()
+            print(f"Total size: {total_size / 1024:.1f} KB")
+            print()
+            for p in pending:
+                time_str = p.timestamp.strftime("%Y-%m-%d %H:%M:%S")
+                size = p.audio_path.stat().st_size / 1024
+                print(f"  {p.id} ({size:.1f} KB)")
+                print(f"    Recorded: {time_str}")
+                if p.app_name:
+                    print(f"    App: {p.app_name}")
+        else:
+            print("No pending recordings.")
+        return
+
     # Load and potentially update settings
     settings = load_settings()
 
@@ -210,12 +324,16 @@ def main() -> None:
         return
 
     # Run appropriate mode
-    if args.overlay:
-        run_overlay_mode(settings)
-    elif args.cli:
+    if args.cli:
         run_cli(settings)
+    elif args.overlay:
+        run_overlay_mode(settings)
     else:
-        run_overlay_mode(settings)  # Default to overlay mode
+        # Default to full Mac app on macOS, overlay on other platforms
+        if sys.platform == "darwin":
+            run_mac_app(settings)
+        else:
+            run_overlay_mode(settings)
 
 
 def run_cli(settings) -> None:
@@ -226,7 +344,7 @@ def run_cli(settings) -> None:
     from .transcriber import Transcriber
     from .typer import TextTyper
 
-    print("Whisper Flow - CLI Mode")
+    print("Rodin - CLI Mode")
     print("=" * 40)
 
     # Initialize components
@@ -334,6 +452,17 @@ def run_overlay_mode(settings) -> None:
         run_cli(settings)
 
 
+def run_mac_app(settings) -> None:
+    """Run the full Mac app with menu bar and preferences."""
+    if sys.platform != "darwin":
+        print("Mac app only available on macOS, running in CLI mode")
+        run_cli(settings)
+        return
+
+    from .ui.app import run_app
+    run_app()
+
+
 def run_gui(settings) -> None:
     """Run with GUI (menu bar on macOS)."""
     if sys.platform == "darwin":
@@ -352,7 +481,7 @@ def run_test(settings, text: str) -> None:
 
     from .editor import BasicEditor, create_editor
 
-    print("Whisper Flow - Editor Test")
+    print("Rodin - Editor Test")
     print("=" * 40)
     print(f"Input: {text}")
     print()
@@ -385,7 +514,7 @@ def run_test(settings, text: str) -> None:
         print(f"  Time: {elapsed:.2f}s")
     else:
         print("AI Editor: Disabled")
-        print("  Enable with: whisper-flow --editor ollama")
+        print("  Enable with: rodin --editor ollama")
 
 
 def run_benchmark(settings) -> None:
@@ -399,7 +528,7 @@ def run_benchmark(settings) -> None:
     from .editor import BasicEditor, create_editor
     from .transcriber import Transcriber
 
-    print("Whisper Flow - Performance Benchmark")
+    print("Rodin - Performance Benchmark")
     print("=" * 40)
 
     # Generate test audio (3 seconds)
@@ -474,7 +603,7 @@ def run_record_test(settings, seconds: int) -> None:
     from .recorder import AudioRecorder
     from .transcriber import Transcriber
 
-    print(f"Whisper Flow - Record Test ({seconds}s)")
+    print(f"Rodin - Record Test ({seconds}s)")
     print("=" * 40)
 
     recorder = AudioRecorder(settings.audio)
@@ -511,6 +640,62 @@ def run_record_test(settings, seconds: int) -> None:
         edit_time = time.time() - start
         print(f"   {edited}")
         print(f"   (took {edit_time:.2f}s)")
+
+
+def download_model(model_size: str) -> None:
+    """Download a Whisper model for offline use."""
+    from .config import get_config_dir
+
+    print(f"Rodin - Download Model: {model_size}")
+    print("=" * 40)
+
+    # Model sizes (approximate)
+    sizes = {
+        "tiny": "75 MB",
+        "base": "145 MB",
+        "small": "465 MB",
+        "medium": "1.5 GB",
+        "large-v3": "3 GB",
+    }
+    print(f"Model size: ~{sizes.get(model_size, 'unknown')}")
+    print()
+
+    model_dir = get_config_dir() / "models"
+    model_dir.mkdir(parents=True, exist_ok=True)
+
+    # Use faster-whisper's download mechanism
+    # This downloads from HuggingFace once, then it's cached locally
+    print("Downloading model (this may take a few minutes)...")
+    print(f"Saving to: {model_dir}")
+    print()
+
+    try:
+        from faster_whisper import WhisperModel
+
+        # This will download the model if not present
+        model = WhisperModel(
+            model_size,
+            device="cpu",
+            compute_type="int8",
+            download_root=str(model_dir),
+        )
+
+        print()
+        print("Download complete!")
+        print(f"Model '{model_size}' is now available for offline use.")
+        print()
+        print("To use this model, run:")
+        print(f"  rodin --model {model_size}")
+
+        # Clean up
+        del model
+
+    except Exception as e:
+        print(f"Error downloading model: {e}")
+        print()
+        print("Make sure you have an internet connection.")
+        print("If the problem persists, try:")
+        print("  pip install --upgrade faster-whisper")
 
 
 if __name__ == "__main__":

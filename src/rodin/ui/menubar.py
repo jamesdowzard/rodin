@@ -17,10 +17,10 @@ from ..typer import TextTyper
 
 
 class WhisperFlowApp(rumps.App):
-    """Menu bar application for Whisper Flow."""
+    """Menu bar application for Rodin."""
 
     def __init__(self, settings: Settings | None = None):
-        super().__init__("Whisper Flow", icon=None, quit_button=None)
+        super().__init__("Rodin", icon=None, quit_button=None)
 
         self.settings = settings or load_settings()
 
@@ -214,7 +214,7 @@ class WhisperFlowApp(rumps.App):
             print(f"Error processing recording: {e}")
             self._update_title("error")
             rumps.notification(
-                "Whisper Flow Error",
+                "Rodin Error",
                 "Processing failed",
                 str(e),
             )
@@ -265,7 +265,7 @@ class WhisperFlowApp(rumps.App):
     def _load_model(self, _) -> None:
         """Pre-load the Whisper model."""
         if self.transcriber.is_loaded():
-            rumps.notification("Whisper Flow", "Model Status", "Model already loaded")
+            rumps.notification("Rodin", "Model Status", "Model already loaded")
             return
 
         self._update_title("processing")
@@ -274,12 +274,12 @@ class WhisperFlowApp(rumps.App):
             try:
                 self.transcriber.load_model()
                 rumps.notification(
-                    "Whisper Flow",
+                    "Rodin",
                     "Model Loaded",
                     f"Loaded {self.settings.whisper.model_size} model",
                 )
             except Exception as e:
-                rumps.notification("Whisper Flow", "Error", f"Failed to load model: {e}")
+                rumps.notification("Rodin", "Error", f"Failed to load model: {e}")
             finally:
                 self._update_title("idle")
 
@@ -299,12 +299,12 @@ class WhisperFlowApp(rumps.App):
             if audio_data:
                 duration = len(audio_data) / (16000 * 2)  # 16kHz, 16-bit
                 rumps.notification(
-                    "Whisper Flow",
+                    "Rodin",
                     "Test Complete",
                     f"Recorded {duration:.1f}s of audio",
                 )
             else:
-                rumps.notification("Whisper Flow", "Test Failed", "No audio captured")
+                rumps.notification("Rodin", "Test Failed", "No audio captured")
 
             self._update_title("idle")
 

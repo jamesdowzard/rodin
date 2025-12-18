@@ -1,4 +1,4 @@
-"""Floating overlay window for Whisper Flow."""
+"""Floating overlay window for Rodin."""
 
 import sys
 import threading
@@ -31,12 +31,15 @@ from AppKit import (
 from PyObjCTools import AppHelper
 
 from ..app_context import AppContextManager, get_frontmost_app
+from ..audio_queue import AudioQueue, PendingRecording, get_queue
 from ..config import Settings, load_settings, get_config_dir
 from ..dictionary import PersonalDictionary
 from ..editor import create_editor
 from ..hotkey import HotkeyHandler
 from ..recorder import AudioRecorder
 from ..snippets import SnippetExpander
+from ..sounds import play_start_sound, play_stop_sound, play_error_sound
+from ..stats import get_db
 from ..transcriber import Transcriber
 from ..typer import TextTyper
 from ..voice_commands import VoiceCommandProcessor
@@ -142,18 +145,6 @@ class MicButtonView(NSView):
         self._on_click = callback
 
 
-def _log_transcription(raw_text: str, edited_text: str | None, duration: float) -> None:
-    """Log transcription to file."""
-    from datetime import datetime
-    log_dir = get_config_dir()
-    log_file = log_dir / "transcriptions.log"
-
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    with open(log_file, "a") as f:
-        f.write(f"\n=== {timestamp} ({duration:.1f}s) ===\n")
-        f.write(f"Raw: {raw_text}\n")
-        if edited_text and edited_text != raw_text:
-            f.write(f"Edited: {edited_text}\n")
 
 
 class OverlayWindow:
@@ -180,9 +171,14 @@ class OverlayWindow:
         self.voice_commands = VoiceCommandProcessor()
         self.app_context = AppContextManager(self.settings.app_context.app_presets)
 
+        # Resilient audio queue and stats
+        self.audio_queue = get_queue()
+        self.stats_db = get_db()
+
         # State
         self._is_recording = False
         self._is_processing = False
+        self._current_app_context: dict | None = None
 
         # Create window
         self._create_window()
@@ -245,9 +241,19 @@ class OverlayWindow:
         if self._is_processing or self._is_recording:
             return
 
+        # Capture app context at start of recording
+        if self.settings.app_context.enabled:
+            self._current_app_context = self.app_context.get_context()
+        else:
+            self._current_app_context = None
+
         self._is_recording = True
         self.button_view.setRecording_(True)
         self.recorder.start()
+
+        # Play start sound
+        if self.settings.ui.play_sounds:
+            play_start_sound()
 
         # Schedule UI refresh for animation
         self._schedule_refresh()
@@ -262,6 +268,10 @@ class OverlayWindow:
         self.button_view.setRecording_(False)
         self.button_view.setProcessing_(True)
 
+        # Play stop sound
+        if self.settings.ui.play_sounds:
+            play_stop_sound()
+
         # Process in background
         threading.Thread(target=self._process_recording, daemon=True).start()
 
@@ -269,15 +279,25 @@ class OverlayWindow:
         """Process the recorded audio.
 
         Pipeline:
-        1. Transcribe audio → raw text
-        2. Apply personal dictionary corrections
-        3. Check for voice commands (may exit early)
-        4. AI editing (with app context awareness)
-        5. Snippet expansion
-        6. Type the text at cursor
+        1. Save audio to queue (resilient - never lose recordings)
+        2. Transcribe audio → raw text
+        3. Apply personal dictionary corrections
+        4. Check for voice commands (may exit early)
+        5. AI editing (with app context awareness)
+        6. Snippet expansion
+        7. Type the text at cursor
+        8. Record stats
         """
         import time as _time
         start_time = _time.time()
+
+        # Get app context captured at recording start
+        context = self._current_app_context
+        app_bundle_id = context.get("bundle_id") if context else None
+        app_name = context.get("name") if context else None
+        preset = context.get("preset", self.settings.ai_editor.preset) if context else self.settings.ai_editor.preset
+
+        pending_recording = None
 
         try:
             audio_data = self.recorder.stop()
@@ -286,44 +306,58 @@ class OverlayWindow:
                 print("No audio recorded")
                 return
 
-            # 1. Transcribe
+            # 1. Save to queue immediately (resilient storage)
+            pending_recording = self.audio_queue.save_recording(
+                audio_data=audio_data,
+                app_bundle_id=app_bundle_id,
+                app_name=app_name,
+                preset=preset,
+            )
+            print(f"Audio saved: {pending_recording.id}")
+
+            # 2. Transcribe
             text = self.transcriber.transcribe(audio_data)
 
             if not text:
                 print("No speech detected")
+                # Keep the recording in case user wants to retry
                 return
 
             raw_text = text
             print(f"Transcribed: {text}")
 
-            # 2. Apply personal dictionary corrections
+            # 3. Apply personal dictionary corrections
             if self.settings.dictionary.enabled:
                 text = self.dictionary.apply(text)
                 if text != raw_text:
                     print(f"Dictionary: {text}")
 
-            # 3. Check for voice commands
+            # 4. Check for voice commands
             if self.settings.voice_commands.enabled:
                 command, remaining_text = self.voice_commands.detect_command(text)
                 if command:
                     print(f"Voice command: {command[0]}")
                     self.voice_commands.execute_command(command, self.typer)
                     if not remaining_text:
-                        # Pure command, no text to process
+                        # Pure command, no text to process - still record it
                         duration = _time.time() - start_time
-                        _log_transcription(raw_text, f"[Command: {command[0]}]", duration)
+                        self.stats_db.record(
+                            raw_text=raw_text,
+                            edited_text=f"[Command: {command[0]}]",
+                            duration_seconds=duration,
+                            app_bundle_id=app_bundle_id,
+                            app_name=app_name,
+                            preset_used=preset,
+                        )
+                        # Mark recording as processed
+                        if pending_recording:
+                            self.audio_queue.mark_completed(pending_recording)
                         return
                     text = remaining_text
 
-            # 4. Get app context for AI editing preset
-            preset = self.settings.ai_editor.preset
-            if self.settings.app_context.enabled:
-                context = self.app_context.get_context()
-                if context["preset"] != "default":
-                    preset = context["preset"]
-                    print(f"App context: {context['name']} → {preset}")
-
-            # 5. AI editing
+            # 5. AI editing (use preset from context)
+            if self.settings.ai_editor.enabled and preset != "default":
+                print(f"AI editing with preset: {preset}")
             if self.settings.ai_editor.enabled:
                 text = self.editor.edit(text, preset=preset)
                 print(f"Edited: {text}")
@@ -345,14 +379,30 @@ class OverlayWindow:
             if self.settings.dictionary.auto_learn and text != raw_text:
                 self.dictionary.learn_from_correction(raw_text, text)
 
-            # Log transcription
+            # 8. Record stats
             duration = _time.time() - start_time
-            _log_transcription(raw_text, text if text != raw_text else None, duration)
+            self.stats_db.record(
+                raw_text=raw_text,
+                edited_text=text if text != raw_text else None,
+                duration_seconds=duration,
+                app_bundle_id=app_bundle_id,
+                app_name=app_name,
+                preset_used=preset,
+            )
+
+            # Mark recording as successfully processed (delete from queue)
+            if pending_recording:
+                self.audio_queue.mark_completed(pending_recording)
+
+            print(f"Done in {duration:.1f}s")
 
         except Exception as e:
             print(f"Error: {e}")
             import traceback
             traceback.print_exc()
+            # Audio is safely in queue - will be retried later
+            if pending_recording:
+                print(f"Recording saved for retry: {pending_recording.id}")
         finally:
             self._is_processing = False
             # Update UI on main thread
@@ -364,6 +414,48 @@ class OverlayWindow:
             self.button_view.setNeedsDisplay_(True)
             # Refresh every 100ms for animation
             AppHelper.callLater(0.1, self._schedule_refresh)
+
+    def _process_pending_recording(self, recording: PendingRecording, audio_data: bytes) -> bool:
+        """Process a single pending recording. Returns True if successful."""
+        try:
+            text = self.transcriber.transcribe(audio_data)
+            if not text:
+                return True  # No speech - consider it processed
+
+            raw_text = text
+
+            # Apply dictionary
+            if self.settings.dictionary.enabled:
+                text = self.dictionary.apply(text)
+
+            # AI editing
+            preset = recording.preset or self.settings.ai_editor.preset
+            if self.settings.ai_editor.enabled:
+                text = self.editor.edit(text, preset=preset)
+
+            # Snippet expansion
+            if self.settings.snippets.enabled:
+                text = self.snippets.expand(text)
+
+            # Calculate approximate duration from file size (16kHz, 16-bit mono)
+            duration = len(audio_data) / (16000 * 2)
+
+            # Record to stats
+            self.stats_db.record(
+                raw_text=raw_text,
+                edited_text=text if text != raw_text else None,
+                duration_seconds=duration,
+                app_bundle_id=recording.app_bundle_id,
+                app_name=recording.app_name,
+                preset_used=preset,
+            )
+
+            print(f"Processed pending: {recording.id} -> {text[:50]}...")
+            return True
+
+        except Exception as e:
+            print(f"Failed to process {recording.id}: {e}")
+            return False
 
     def run(self):
         """Run the overlay."""
@@ -379,9 +471,29 @@ class OverlayWindow:
         frame = self.window.frame()
         print(f"Window position: x={frame.origin.x}, y={frame.origin.y}, size={frame.size.width}x{frame.size.height}")
 
+        # Check for pending recordings
+        pending_count = self.audio_queue.get_pending_count()
+        if pending_count > 0:
+            print(f"Found {pending_count} pending recording(s) from previous session")
+
         # Load model in background
         print("Loading Whisper model...")
-        threading.Thread(target=self.transcriber.load_model, daemon=True).start()
+        def load_and_process_pending():
+            self.transcriber.load_model()
+            # Process any pending recordings after model loads
+            if pending_count > 0:
+                print("Processing pending recordings...")
+                processed = self.audio_queue.process_pending(self._process_pending_recording)
+                if processed > 0:
+                    print(f"Processed {processed} pending recording(s)")
+
+        threading.Thread(target=load_and_process_pending, daemon=True).start()
+
+        # Start background processor for any future failures (checks every 60s)
+        self.audio_queue.start_background_processor(
+            self._process_pending_recording,
+            interval_seconds=60.0,
+        )
 
         # Start hotkey listener in a separate thread to avoid event loop conflict
         def start_hotkey():
@@ -390,7 +502,12 @@ class OverlayWindow:
             self.hotkey_handler.start()
         threading.Thread(target=start_hotkey, daemon=True).start()
 
-        print(f"Whisper Flow ready!")
+        # Show stats summary
+        stats = self.stats_db.get_stats()
+        if stats.total_transcriptions > 0:
+            print(f"Lifetime: {stats.total_words:,} words in {stats.total_transcriptions:,} transcriptions")
+
+        print(f"Rodin ready!")
         print(f"Hotkey: Cmd+Shift+Space (hold to talk)")
         print(f"Or click the mic button on the right side of your screen")
 
@@ -400,6 +517,7 @@ class OverlayWindow:
     def stop(self):
         """Stop the overlay."""
         self.hotkey_handler.stop()
+        self.audio_queue.stop_background_processor()
         AppHelper.stopEventLoop()
 
 

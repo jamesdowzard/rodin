@@ -10,14 +10,14 @@
 
 ```bash
 # Clone the repository
-git clone https://github.com/jamesdowzard/whisper-flow.git
-cd whisper-flow
+git clone https://github.com/jamesdowzard/rodin.git
+cd rodin
 
 # Install in editable mode
 pip install -e .
 
 # Run the overlay
-whisper-flow
+rodin
 ```
 
 ### macOS Permissions
@@ -31,14 +31,14 @@ You'll need to grant microphone and accessibility permissions:
 
 ```powershell
 # Clone the repository
-git clone https://github.com/jamesdowzard/whisper-flow.git
-cd whisper-flow
+git clone https://github.com/jamesdowzard/rodin.git
+cd rodin
 
 # Install with Python 3.11 (recommended)
 & "C:\Program Files\Python311\python.exe" -m pip install -e .
 
 # Run the overlay
-& "C:\Program Files\Python311\python.exe" -m whisper_flow.main --overlay
+& "C:\Program Files\Python311\python.exe" -m rodin.main --overlay
 ```
 
 ### Windows Notes
@@ -64,20 +64,20 @@ ollama serve
 ollama pull llama3.2:3b
 ```
 
-Then enable in Whisper Flow:
+Then enable in Rodin:
 ```bash
-whisper-flow --editor ollama
+rodin --editor ollama
 ```
 
 ## Verifying Installation
 
 ```bash
 # List audio devices
-whisper-flow --list-devices
+rodin --list-devices
 
 # Run a quick test
-whisper-flow --record-test 3
+rodin --record-test 3
 
 # Test AI editor
-whisper-flow --test "um like hello world you know"
+rodin --test "um like hello world you know"
 ```

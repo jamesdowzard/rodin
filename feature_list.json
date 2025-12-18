@@ -1,5 +1,5 @@
 {
-  "project": "whisper-flow",
+  "project": "rodin",
   "description": "Local voice dictation with AI editing - open source Wispr Flow alternative",
   "features": [
     {
@@ -80,7 +80,7 @@
       "priority": 2,
       "tested": true,
       "commit": "0becb06",
-      "notes": "whisper-flow --cli"
+      "notes": "rodin --cli"
     },
     {
       "id": 9,
@@ -161,6 +161,76 @@
       "tested": false,
       "commit": null,
       "notes": "Core code should work, UI needs pystray instead of rumps"
+    },
+    {
+      "id": 17,
+      "name": "Transcription stats database",
+      "description": "SQLite database tracking all transcriptions with word counts, apps, time saved",
+      "status": "passing",
+      "priority": 2,
+      "tested": false,
+      "commit": null,
+      "notes": "stats.py - supports lifetime/today/week/month/year stats, top words, top apps"
+    },
+    {
+      "id": 18,
+      "name": "Resilient audio buffering",
+      "description": "Audio saved immediately, transcribed later - never lose recordings",
+      "status": "passing",
+      "priority": 1,
+      "tested": false,
+      "commit": null,
+      "notes": "audio_queue.py - saves to pending/, processes on startup, retries on failure"
+    },
+    {
+      "id": 19,
+      "name": "Offline model download",
+      "description": "--download-model command for offline-first operation",
+      "status": "passing",
+      "priority": 1,
+      "tested": false,
+      "commit": null,
+      "notes": "Models downloaded once, strictly local runtime - no HuggingFace at runtime"
+    },
+    {
+      "id": 20,
+      "name": "Stats CLI commands",
+      "description": "--stats, --stats-today, --history, --pending commands",
+      "status": "passing",
+      "priority": 3,
+      "tested": false,
+      "commit": null,
+      "notes": "View transcription history and statistics from CLI"
+    },
+    {
+      "id": 21,
+      "name": "Mac app with settings UI",
+      "description": "Native macOS app with menu bar and preferences window",
+      "status": "passing",
+      "priority": 1,
+      "tested": false,
+      "commit": null,
+      "notes": "app.py - NSStatusBar item, preferences window with model/mode/editor selection"
+    },
+    {
+      "id": 22,
+      "name": "Sound effects",
+      "description": "Audio feedback for recording start/stop",
+      "status": "passing",
+      "priority": 3,
+      "tested": false,
+      "commit": null,
+      "notes": "sounds.py - Uses macOS system sounds (Tink, Pop)"
+    },
+    {
+      "id": 23,
+      "name": "Renamed to Rodin",
+      "description": "Project renamed from whisper-flow to Rodin",
+      "status": "passing",
+      "priority": 1,
+      "tested": true,
+      "commit": null,
+      "notes": "CLI is now 'rodin', config at ~/Library/Application Support/Rodin/"
     }
   ]
 }

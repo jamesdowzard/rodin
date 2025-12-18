@@ -25,7 +25,7 @@ class Transcriber:
     def _get_local_model_path(self) -> Path | None:
         """Get path to locally cached model if it exists."""
         model_dir = self._get_model_dir()
-        # Map model size to HuggingFace repo name
+        # Map model size to cached repo directory name
         model_repos = {
             "tiny": "Systran/faster-whisper-tiny",
             "base": "Systran/faster-whisper-base",
@@ -66,7 +66,11 @@ class Transcriber:
         return device, compute_type
 
     def load_model(self) -> None:
-        """Load the Whisper model."""
+        """Load the Whisper model.
+
+        Prefers locally cached models. Will only attempt network download
+        if explicitly enabled via allow_download parameter.
+        """
         if self._model is not None:
             return
 
@@ -83,18 +87,19 @@ class Transcriber:
                 compute_type=compute_type,
                 local_files_only=True,
             )
+            print("Model loaded successfully")
         else:
-            # Fall back to downloading (will fail if network blocked)
-            model_dir = self._get_model_dir()
-            print(f"Loading Whisper model '{self.config.model_size}' on {device}...")
-            self._model = WhisperModel(
-                self.config.model_size,
-                device=device,
-                compute_type=compute_type,
-                download_root=str(model_dir),
+            # Model not found locally - give helpful error
+            print(f"Model '{self.config.model_size}' not found locally.")
+            print()
+            print("Download it first with:")
+            print(f"  rodin --download-model {self.config.model_size}")
+            print()
+            print("Or run with a different model that's already downloaded.")
+            raise FileNotFoundError(
+                f"Whisper model '{self.config.model_size}' not found. "
+                f"Run: rodin --download-model {self.config.model_size}"
             )
-
-        print("Model loaded successfully")
 
     def transcribe(self, audio_data: bytes) -> str:
         """Transcribe audio data to text.

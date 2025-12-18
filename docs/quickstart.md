@@ -1,21 +1,21 @@
 # Quick Start
 
-## Starting Whisper Flow
+## Starting Rodin
 
 ```bash
 # Default: floating overlay mode
-whisper-flow
+rodin
 
 # CLI mode (terminal output)
-whisper-flow --cli
+rodin --cli
 
 # Menu bar mode (macOS only)
-whisper-flow --menubar
+rodin --menubar
 ```
 
 ## Basic Usage
 
-1. **Start the app** - Run `whisper-flow`
+1. **Start the app** - Run `rodin`
 2. **Look for the mic button** - Floating on the right side of your screen
 3. **Hold the hotkey** - Cmd+Shift+Space (Mac) or Ctrl+Shift+Space (Windows)
 4. **Speak** - Talk naturally
@@ -33,25 +33,25 @@ whisper-flow --menubar
 
 ```bash
 # Switch to toggle mode
-whisper-flow --mode toggle
+rodin --mode toggle
 ```
 
 ## Adding Custom Words
 
-Teach Whisper Flow your vocabulary:
+Teach Rodin your vocabulary:
 
 ```bash
 # Add a name
-whisper-flow --add-word "john smith" "John Smith"
+rodin --add-word "john smith" "John Smith"
 
 # Add a company name
-whisper-flow --add-word "acme corp" "ACME Corporation"
+rodin --add-word "acme corp" "ACME Corporation"
 
 # Add a technical term
-whisper-flow --add-word "kubernetes" "Kubernetes"
+rodin --add-word "kubernetes" "Kubernetes"
 
 # View all words
-whisper-flow --list-dictionary
+rodin --list-dictionary
 ```
 
 ## Adding Snippets
@@ -60,18 +60,18 @@ Create text shortcuts:
 
 ```bash
 # Email signature
-whisper-flow --add-snippet "sig" "Best regards,
+rodin --add-snippet "sig" "Best regards,
 James"
 
 # Meeting link
-whisper-flow --add-snippet "zoom" "https://zoom.us/j/123456789"
+rodin --add-snippet "zoom" "https://zoom.us/j/123456789"
 
 # Code template
-whisper-flow --add-snippet "pydef" "def function_name():
+rodin --add-snippet "pydef" "def function_name():
     pass"
 
 # View all snippets
-whisper-flow --list-snippets
+rodin --list-snippets
 ```
 
 ## Voice Commands
@@ -92,35 +92,35 @@ Say these commands instead of typing:
 
 ```bash
 # Use local Ollama
-whisper-flow --editor ollama
+rodin --editor ollama
 
 # Use OpenAI (requires API key)
 export OPENAI_API_KEY="sk-..."
-whisper-flow --editor openai
+rodin --editor openai
 
 # Use Anthropic (requires API key)
 export ANTHROPIC_API_KEY="sk-ant-..."
-whisper-flow --editor anthropic
+rodin --editor anthropic
 
 # Disable AI editing
-whisper-flow --editor none
+rodin --editor none
 ```
 
 ## AI Presets
 
 ```bash
 # Default - general cleanup
-whisper-flow --preset default
+rodin --preset default
 
 # Email - professional formatting
-whisper-flow --preset email
+rodin --preset email
 
 # Code - code/comments formatting
-whisper-flow --preset code
+rodin --preset code
 
 # Notes - bullet point style
-whisper-flow --preset notes
+rodin --preset notes
 
 # Commit - git commit message style
-whisper-flow --preset commit
+rodin --preset commit
 ```

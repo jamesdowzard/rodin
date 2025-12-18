@@ -3,8 +3,8 @@
 ## Project Structure
 
 ```
-whisper-flow/
-├── src/whisper_flow/
+rodin/
+├── src/rodin/
 │   ├── __init__.py          # Package init
 │   ├── main.py              # CLI entry point
 │   ├── config.py            # Configuration (Pydantic)
@@ -31,8 +31,8 @@ whisper-flow/
 
 ```bash
 # Clone repo
-git clone https://github.com/jamesdowzard/whisper-flow.git
-cd whisper-flow
+git clone https://github.com/jamesdowzard/rodin.git
+cd rodin
 
 # Create virtual environment (optional)
 python -m venv venv
@@ -83,7 +83,7 @@ TextTyper.type_text(text)
 
 ### Adding a New Feature
 
-1. **Create module** in `src/whisper_flow/`
+1. **Create module** in `src/rodin/`
 2. **Add config class** in `config.py` (Pydantic model)
 3. **Add to Settings** class in `config.py`
 4. **Integrate into pipeline** in `overlay.py` and `main.py`
@@ -107,13 +107,13 @@ TextTyper.type_text(text)
 
 ```bash
 # Test transcription
-whisper-flow --record-test 3
+rodin --record-test 3
 
 # Test AI editor
-whisper-flow --test "test text here"
+rodin --test "test text here"
 
 # Test specific components
-python -c "from whisper_flow.dictionary import PersonalDictionary; ..."
+python -c "from rodin.dictionary import PersonalDictionary; ..."
 ```
 
 ## Debugging
@@ -123,24 +123,24 @@ python -c "from whisper_flow.dictionary import PersonalDictionary; ..."
 The overlay prints to stdout/stderr. Run from terminal to see output:
 
 ```bash
-python -m whisper_flow.main --overlay
+python -m rodin.main --overlay
 ```
 
 ### Check transcription log
 
 ```bash
 # macOS
-cat ~/Library/Application\ Support/WhisperFlow/transcriptions.log
+cat ~/Library/Application\ Support/Rodin/transcriptions.log
 
 # Windows
-type %LOCALAPPDATA%\WhisperFlow\transcriptions.log
+type %LOCALAPPDATA%\Rodin\transcriptions.log
 ```
 
 ### Audio issues
 
 ```bash
 # List available devices
-whisper-flow --list-devices
+rodin --list-devices
 
 # Test specific device
 # Edit config.json: "audio": {"device": 0}

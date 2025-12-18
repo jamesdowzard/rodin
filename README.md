@@ -1,4 +1,4 @@
-# Whisper Flow
+# Rodin
 
 Local voice dictation with AI editing - an open source alternative to [Wispr Flow](https://wisprflow.ai).
 
@@ -19,12 +19,12 @@ Local voice dictation with AI editing - an open source alternative to [Wispr Flo
 
 ```bash
 # Install
-git clone https://github.com/jamesdowzard/whisper-flow.git
-cd whisper-flow
+git clone https://github.com/jamesdowzard/rodin.git
+cd rodin
 pip install -e .
 
 # Run
-whisper-flow
+rodin
 ```
 
 **Default hotkey**: `Cmd+Shift+Space` (Mac) or `Ctrl+Shift+Space` (Windows) - hold to talk
@@ -42,22 +42,22 @@ whisper-flow
 
 ```bash
 # Run with floating overlay (default)
-whisper-flow
+rodin
 
 # CLI mode
-whisper-flow --cli
+rodin --cli
 
 # Enable Ollama AI editing
-whisper-flow --editor ollama
+rodin --editor ollama
 
 # Add custom words
-whisper-flow --add-word "acme corp" "ACME Corporation"
+rodin --add-word "acme corp" "ACME Corporation"
 
 # Add snippets
-whisper-flow --add-snippet "sig" "Best regards, James"
+rodin --add-snippet "sig" "Best regards, James"
 
 # Test recording
-whisper-flow --record-test 5
+rodin --record-test 5
 ```
 
 ## AI Editing Providers
@@ -82,7 +82,7 @@ whisper-flow --record-test 5
 
 ## Comparison with Wispr Flow
 
-| Feature | Whisper Flow | Wispr Flow |
+| Feature | Rodin | Wispr Flow |
 |---------|--------------|------------|
 | Transcription | Local (Whisper) | Cloud |
 | Privacy | 100% offline option | Cloud servers |
@@ -99,7 +99,7 @@ whisper-flow --record-test 5
 ### Microphone not working
 
 1. Grant microphone permission in System Settings → Privacy & Security → Microphone
-2. Check available devices: `whisper-flow --list-devices`
+2. Check available devices: `rodin --list-devices`
 
 ### Hotkey not working
 

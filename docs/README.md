@@ -1,6 +1,6 @@
-# Whisper Flow Documentation
+# Rodin Documentation
 
-Whisper Flow is an open-source local voice dictation tool with AI-powered text editing. It's a privacy-focused alternative to commercial voice dictation apps like Wispr Flow.
+Rodin is an open-source local voice dictation tool with AI-powered text editing. It's a privacy-focused alternative to commercial voice dictation apps like Wispr Flow.
 
 ## Table of Contents
 
@@ -23,5 +23,5 @@ Whisper Flow is an open-source local voice dictation tool with AI-powered text e
 
 ## Quick Links
 
-- [GitHub Repository](https://github.com/jamesdowzard/whisper-flow)
-- [Report Issues](https://github.com/jamesdowzard/whisper-flow/issues)
+- [GitHub Repository](https://github.com/jamesdowzard/rodin)
+- [Report Issues](https://github.com/jamesdowzard/rodin/issues)

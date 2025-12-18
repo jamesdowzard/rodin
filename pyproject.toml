@@ -3,21 +3,20 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "whisper-flow"
+name = "rodin"
 version = "0.1.0"
-description = "Local voice dictation with AI editing - open source Wispr Flow alternative"
+description = "Local voice dictation with AI editing - 100% offline, open source"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
 authors = [
     { name = "James Dowzard" }
 ]
-keywords = ["voice", "dictation", "whisper", "transcription", "speech-to-text"]
+keywords = ["voice", "dictation", "whisper", "transcription", "speech-to-text", "offline"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Environment :: MacOS X",
     "Intended Audience :: End Users/Desktop",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: MacOS",
     "Operating System :: Microsoft :: Windows",
     "Programming Language :: Python :: 3.10",
@@ -32,6 +31,7 @@ dependencies = [
     "pynput>=1.7.6",
     "pyperclip>=1.8.2",
     "rumps>=0.4.0; sys_platform == 'darwin'",
+    "pyobjc-framework-Cocoa>=10.0; sys_platform == 'darwin'",
     "pystray>=0.19.0; sys_platform == 'win32'",
     "pillow>=10.0.0",
     "httpx>=0.25.0",
@@ -43,23 +43,24 @@ dependencies = [
 dev = [
     "pytest>=7.0.0",
     "ruff>=0.1.0",
+    "py2app>=0.28.0; sys_platform == 'darwin'",
 ]
 ollama = [
     "ollama>=0.1.0",
 ]
 
 [project.scripts]
-whisper-flow = "whisper_flow.main:main"
+rodin = "rodin.main:main"
 
 [project.gui-scripts]
-whisper-flow-gui = "whisper_flow.main:main"
+rodin-app = "rodin.main:main"
 
 [project.urls]
-Homepage = "https://github.com/jamesdowzard/whisper-flow"
-Repository = "https://github.com/jamesdowzard/whisper-flow"
+Homepage = "https://github.com/jamesdowzard/rodin"
+Repository = "https://github.com/jamesdowzard/rodin"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/whisper_flow"]
+packages = ["src/rodin"]
 
 [tool.ruff]
 line-length = 100
