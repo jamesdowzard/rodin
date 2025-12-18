@@ -68,12 +68,20 @@ class HotkeyHandler:
         except Exception:
             return None
 
+    def _is_single_key_mode(self) -> bool:
+        """Check if we're using single-key mode (just a modifier, no additional key)."""
+        return not self.config.key or self.config.key.lower() == self.config.modifier1.lower()
+
     def _is_hotkey_pressed(self) -> bool:
         """Check if the configured hotkey combination is pressed."""
-        required = {self.config.modifier1.lower(), self.config.key.lower()}
-        # Only require modifier2 if it's set
-        if self.config.modifier2:
-            required.add(self.config.modifier2.lower())
+        if self._is_single_key_mode():
+            # Single key mode: just the modifier alone
+            required = {self.config.modifier1.lower()}
+        else:
+            required = {self.config.modifier1.lower(), self.config.key.lower()}
+            # Only require modifier2 if it's set
+            if self.config.modifier2:
+                required.add(self.config.modifier2.lower())
         return required.issubset(self._pressed_keys)
 
     def _on_press(self, key) -> None:
@@ -148,12 +156,16 @@ class HotkeyHandler:
         self._listener.start()
 
         mod1 = "Cmd" if self.config.modifier1 == "cmd" else self.config.modifier1.title()
-        key = self.config.key.title()
 
-        if self.config.modifier2:
+        if self._is_single_key_mode():
+            # Single key mode - just show the modifier
+            hotkey_str = mod1
+        elif self.config.modifier2:
             mod2 = self.config.modifier2.title()
+            key = self.config.key.title()
             hotkey_str = f"{mod1}+{mod2}+{key}"
         else:
+            key = self.config.key.title()
             hotkey_str = f"{mod1}+{key}"
 
         mode_desc = {

@@ -15,7 +15,8 @@ class HotkeyConfig(BaseModel):
     # Default: Cmd+Shift+Space on Mac, Ctrl+Shift+Space on Windows
     modifier1: str = Field(default="cmd" if sys.platform == "darwin" else "ctrl")
     modifier2: str | None = Field(default="shift")  # Optional second modifier
-    key: str = Field(default="space")
+    # Key can be None/empty for single-key mode (just the modifier triggers it)
+    key: str | None = Field(default="space")
     # Modes:
     # - hold: Hold hotkey to record, release to stop
     # - toggle: Press once to start, press again to stop
