@@ -159,8 +159,10 @@ class OverlayWindow:
             return
 
         self._is_recording = True
-        self._update_button_state()
+        # Schedule UI update on main thread
+        self.root.after(0, self._update_button_state)
         self.recorder.start()
+        print("Recording started...")
 
     def _on_deactivate(self):
         """Stop recording and process."""
@@ -169,7 +171,9 @@ class OverlayWindow:
 
         self._is_recording = False
         self._is_processing = True
-        self._update_button_state()
+        # Schedule UI update on main thread
+        self.root.after(0, self._update_button_state)
+        print("Recording stopped, processing...")
 
         # Process in background
         threading.Thread(target=self._process_recording, daemon=True).start()
