@@ -1,0 +1,166 @@
+{
+  "project": "whisper-flow",
+  "description": "Local voice dictation with AI editing - open source Wispr Flow alternative",
+  "features": [
+    {
+      "id": 1,
+      "name": "Audio recording",
+      "description": "Record audio from microphone using sounddevice",
+      "status": "passing",
+      "priority": 1,
+      "tested": true,
+      "commit": "0becb06",
+      "notes": "Works but needs system mic to be set correctly (not virtual devices)"
+    },
+    {
+      "id": 2,
+      "name": "Whisper transcription",
+      "description": "Transcribe audio using faster-whisper locally",
+      "status": "passing",
+      "priority": 1,
+      "tested": true,
+      "commit": "0becb06",
+      "notes": "Base model loads in ~0.8s, transcribes 3s audio in ~1s"
+    },
+    {
+      "id": 3,
+      "name": "Basic text editor",
+      "description": "Rule-based filler word removal and cleanup",
+      "status": "passing",
+      "priority": 1,
+      "tested": true,
+      "commit": "0becb06",
+      "notes": "Instant, removes um/uh/like/you know"
+    },
+    {
+      "id": 4,
+      "name": "AI text editor - Ollama",
+      "description": "AI cleanup using local Ollama LLM",
+      "status": "passing",
+      "priority": 2,
+      "tested": true,
+      "commit": "0becb06",
+      "notes": "Works with llama3.2:3b, ~3-4s response time"
+    },
+    {
+      "id": 5,
+      "name": "AI text editor - Cloud APIs",
+      "description": "AI cleanup using OpenAI/Anthropic APIs",
+      "status": "passing",
+      "priority": 3,
+      "tested": false,
+      "commit": "0becb06",
+      "notes": "Code complete, not tested (needs API keys)"
+    },
+    {
+      "id": 6,
+      "name": "Text typing at cursor",
+      "description": "Insert transcribed text at current cursor position",
+      "status": "passing",
+      "priority": 1,
+      "tested": true,
+      "commit": "0becb06",
+      "notes": "Uses pynput, supports paste for long text"
+    },
+    {
+      "id": 7,
+      "name": "Global hotkey",
+      "description": "Cmd+Shift+Space to start/stop recording",
+      "status": "passing",
+      "priority": 1,
+      "tested": true,
+      "commit": "0becb06",
+      "notes": "Supports hold-to-talk and push-to-toggle modes"
+    },
+    {
+      "id": 8,
+      "name": "CLI mode",
+      "description": "Terminal-based interface with hotkey support",
+      "status": "passing",
+      "priority": 2,
+      "tested": true,
+      "commit": "0becb06",
+      "notes": "whisper-flow --cli"
+    },
+    {
+      "id": 9,
+      "name": "Menu bar app",
+      "description": "macOS menu bar app using rumps",
+      "status": "passing",
+      "priority": 2,
+      "tested": true,
+      "commit": "0becb06",
+      "notes": "Shows settings, model selection, presets"
+    },
+    {
+      "id": 10,
+      "name": "CLI test commands",
+      "description": "--test, --benchmark, --record-test commands",
+      "status": "passing",
+      "priority": 2,
+      "tested": true,
+      "commit": "240e6fc",
+      "notes": "Useful for debugging and benchmarking"
+    },
+    {
+      "id": 11,
+      "name": "Floating overlay button",
+      "description": "Wispr Flow-style floating mic button on screen",
+      "status": "in_progress",
+      "priority": 1,
+      "tested": false,
+      "commit": null,
+      "notes": "Code written in overlay.py, not yet tested. Uses PyObjC for native macOS window."
+    },
+    {
+      "id": 12,
+      "name": "Audio device selection",
+      "description": "Select specific audio input device in config",
+      "status": "passing",
+      "priority": 2,
+      "tested": false,
+      "commit": null,
+      "notes": "Added to config.py and recorder.py, needs commit"
+    },
+    {
+      "id": 13,
+      "name": "Microphone permission handling",
+      "description": "Proper permission prompts and error messages",
+      "status": "pending",
+      "priority": 2,
+      "tested": false,
+      "commit": null,
+      "notes": "Currently requires manual permission grant in System Settings"
+    },
+    {
+      "id": 14,
+      "name": "Recording animation",
+      "description": "Visual feedback during recording (pulsing icon)",
+      "status": "in_progress",
+      "priority": 3,
+      "tested": false,
+      "commit": null,
+      "notes": "Code in overlay.py, not tested"
+    },
+    {
+      "id": 15,
+      "name": "Sound effects",
+      "description": "Audio feedback for start/stop recording",
+      "status": "pending",
+      "priority": 3,
+      "tested": false,
+      "commit": null,
+      "notes": "Config has play_sounds setting, not implemented"
+    },
+    {
+      "id": 16,
+      "name": "Windows support",
+      "description": "Cross-platform support for Windows",
+      "status": "pending",
+      "priority": 4,
+      "tested": false,
+      "commit": null,
+      "notes": "Core code should work, UI needs pystray instead of rumps"
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+=== Session 2024-12-18 10:00 ===
+Initial implementation of Whisper Flow
+
+Completed:
+- Created GitHub repo: https://github.com/jamesdowzard/whisper-flow
+- Implemented core architecture:
+  - Audio recording (sounddevice)
+  - Whisper transcription (faster-whisper)
+  - AI text editing (Ollama/OpenAI/Anthropic)
+  - Text typing at cursor (pynput)
+  - Global hotkey handler (pynput)
+  - macOS menu bar app (rumps)
+  - Configuration management (pydantic)
+- Added CLI test commands: --test, --benchmark, --record-test
+- Benchmarked performance: ~1s transcription, ~3-4s Ollama editing
+
+Commits:
+- 0becb06: Initial implementation
+- 240e6fc: Add CLI test and benchmark commands
+
+Issues discovered:
+- Microphone permission: Python needs mic access in System Settings > Privacy
+- Default audio device may be virtual (Carlo Verbosi) instead of MacBook mic
+- Need to use SwitchAudioSource to set correct input device
+
+In progress:
+- Floating overlay button (overlay.py) - code written, not tested
+- Audio device selection in config
+
+Next steps:
+1. Test and debug the floating overlay UI
+2. Add proper microphone permission handling
+3. Test full end-to-end recording flow
+4. Commit uncommitted changes (overlay.py, device selection)
+
+Blockers:
+- Microphone not capturing audio in tests (permission or device issue)
