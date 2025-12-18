@@ -66,6 +66,45 @@ class UIConfig(BaseModel):
     play_sounds: bool = Field(default=True)
 
 
+class DictionaryConfig(BaseModel):
+    """Personal dictionary configuration."""
+
+    enabled: bool = Field(default=True)
+    auto_learn: bool = Field(default=True)  # Learn from user corrections
+
+
+class SnippetsConfig(BaseModel):
+    """Snippets configuration."""
+
+    enabled: bool = Field(default=True)
+
+
+class VoiceCommandsConfig(BaseModel):
+    """Voice commands configuration."""
+
+    enabled: bool = Field(default=True)
+
+
+class AppContextConfig(BaseModel):
+    """App context awareness configuration."""
+
+    enabled: bool = Field(default=True)
+    # Per-app preset overrides (bundle ID -> preset name)
+    app_presets: dict[str, str] = Field(default_factory=lambda: {
+        "com.apple.mail": "email",
+        "com.microsoft.Outlook": "email",
+        "com.google.Chrome": "default",  # Could be anything in browser
+        "com.slack.Slack": "default",
+        "com.tinyspeck.slackmacgap": "default",
+        "com.microsoft.VSCode": "code",
+        "dev.zed.Zed": "code",
+        "com.apple.Terminal": "code",
+        "com.googlecode.iterm2": "code",
+        "com.apple.Notes": "notes",
+        "com.notion.Notion": "notes",
+    })
+
+
 class Settings(BaseSettings):
     """Main settings container."""
 
@@ -74,6 +113,10 @@ class Settings(BaseSettings):
     ai_editor: AIEditorConfig = Field(default_factory=AIEditorConfig)
     audio: AudioConfig = Field(default_factory=AudioConfig)
     ui: UIConfig = Field(default_factory=UIConfig)
+    dictionary: DictionaryConfig = Field(default_factory=DictionaryConfig)
+    snippets: SnippetsConfig = Field(default_factory=SnippetsConfig)
+    voice_commands: VoiceCommandsConfig = Field(default_factory=VoiceCommandsConfig)
+    app_context: AppContextConfig = Field(default_factory=AppContextConfig)
 
     # API keys from environment
     openai_api_key: str | None = Field(default=None, alias="OPENAI_API_KEY")

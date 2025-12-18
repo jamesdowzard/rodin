@@ -85,3 +85,65 @@ class TextTyper:
     def press_tab(self) -> None:
         """Press Tab key."""
         self.keyboard.tap(Key.tab)
+
+    def delete_chars(self, count: int = 1) -> None:
+        """Delete characters using backspace.
+
+        Args:
+            count: Number of characters to delete
+        """
+        for _ in range(count):
+            self.keyboard.tap(Key.backspace)
+            time.sleep(0.01)
+
+    def delete_words(self, count: int = 1) -> None:
+        """Delete words using Option+Backspace (Mac) or Ctrl+Backspace (Windows).
+
+        Args:
+            count: Number of words to delete
+        """
+        modifier = Key.alt if sys.platform == "darwin" else Key.ctrl
+        for _ in range(count):
+            with self.keyboard.pressed(modifier):
+                self.keyboard.tap(Key.backspace)
+            time.sleep(0.02)
+
+    def undo(self) -> None:
+        """Perform undo (Cmd+Z / Ctrl+Z)."""
+        modifier = Key.cmd if sys.platform == "darwin" else Key.ctrl
+        with self.keyboard.pressed(modifier):
+            self.keyboard.tap("z")
+
+    def redo(self) -> None:
+        """Perform redo (Cmd+Shift+Z / Ctrl+Y)."""
+        if sys.platform == "darwin":
+            with self.keyboard.pressed(Key.cmd):
+                with self.keyboard.pressed(Key.shift):
+                    self.keyboard.tap("z")
+        else:
+            with self.keyboard.pressed(Key.ctrl):
+                self.keyboard.tap("y")
+
+    def select_all(self) -> None:
+        """Select all text (Cmd+A / Ctrl+A)."""
+        modifier = Key.cmd if sys.platform == "darwin" else Key.ctrl
+        with self.keyboard.pressed(modifier):
+            self.keyboard.tap("a")
+
+    def copy(self) -> None:
+        """Copy selection (Cmd+C / Ctrl+C)."""
+        modifier = Key.cmd if sys.platform == "darwin" else Key.ctrl
+        with self.keyboard.pressed(modifier):
+            self.keyboard.tap("c")
+
+    def cut(self) -> None:
+        """Cut selection (Cmd+X / Ctrl+X)."""
+        modifier = Key.cmd if sys.platform == "darwin" else Key.ctrl
+        with self.keyboard.pressed(modifier):
+            self.keyboard.tap("x")
+
+    def paste(self) -> None:
+        """Paste from clipboard (Cmd+V / Ctrl+V)."""
+        modifier = Key.cmd if sys.platform == "darwin" else Key.ctrl
+        with self.keyboard.pressed(modifier):
+            self.keyboard.tap("v")

@@ -63,6 +63,42 @@ def main() -> None:
         help="Record for N seconds and transcribe (test mode)",
     )
 
+    # Dictionary management
+    parser.add_argument(
+        "--add-word",
+        nargs=2,
+        metavar=("SPOKEN", "CORRECTED"),
+        help="Add a word to personal dictionary (e.g., --add-word 'john doe' 'John Doe')",
+    )
+    parser.add_argument(
+        "--remove-word",
+        metavar="SPOKEN",
+        help="Remove a word from personal dictionary",
+    )
+    parser.add_argument(
+        "--list-dictionary",
+        action="store_true",
+        help="List all words in personal dictionary",
+    )
+
+    # Snippet management
+    parser.add_argument(
+        "--add-snippet",
+        nargs=2,
+        metavar=("TRIGGER", "EXPANSION"),
+        help="Add a snippet (e.g., --add-snippet 'sig' 'Best regards, James')",
+    )
+    parser.add_argument(
+        "--remove-snippet",
+        metavar="TRIGGER",
+        help="Remove a snippet",
+    )
+    parser.add_argument(
+        "--list-snippets",
+        action="store_true",
+        help="List all snippets",
+    )
+
     args = parser.parse_args()
 
     # List devices and exit
@@ -74,6 +110,68 @@ def main() -> None:
         for device in devices:
             print(f"  [{device['index']}] {device['name']}")
             print(f"      Channels: {device['channels']}, Sample Rate: {device['sample_rate']}")
+        return
+
+    # Dictionary management commands
+    if args.add_word:
+        from .dictionary import PersonalDictionary
+        dictionary = PersonalDictionary()
+        spoken, corrected = args.add_word
+        dictionary.add_word(spoken, corrected)
+        print(f"Added: '{spoken}' → '{corrected}'")
+        return
+
+    if args.remove_word:
+        from .dictionary import PersonalDictionary
+        dictionary = PersonalDictionary()
+        if dictionary.remove_word(args.remove_word):
+            print(f"Removed: '{args.remove_word}'")
+        else:
+            print(f"Word not found: '{args.remove_word}'")
+        return
+
+    if args.list_dictionary:
+        from .dictionary import PersonalDictionary
+        dictionary = PersonalDictionary()
+        corrections = dictionary.get_corrections()
+        if corrections:
+            print("Personal Dictionary:")
+            for spoken, corrected in sorted(corrections.items()):
+                print(f"  '{spoken}' → '{corrected}'")
+        else:
+            print("Dictionary is empty. Add words with: --add-word 'spoken' 'Corrected'")
+        return
+
+    # Snippet management commands
+    if args.add_snippet:
+        from .snippets import SnippetExpander
+        snippets = SnippetExpander()
+        trigger, expansion = args.add_snippet
+        snippets.add_snippet(trigger, expansion)
+        print(f"Added snippet: '{trigger}' → '{expansion[:50]}{'...' if len(expansion) > 50 else ''}'")
+        return
+
+    if args.remove_snippet:
+        from .snippets import SnippetExpander
+        snippets = SnippetExpander()
+        if snippets.remove_snippet(args.remove_snippet):
+            print(f"Removed snippet: '{args.remove_snippet}'")
+        else:
+            print(f"Snippet not found: '{args.remove_snippet}'")
+        return
+
+    if args.list_snippets:
+        from .snippets import SnippetExpander
+        snippets = SnippetExpander()
+        all_snippets = snippets.list_snippets()
+        if all_snippets:
+            print("Snippets:")
+            for trigger, expansion in sorted(all_snippets):
+                preview = expansion[:50] + ('...' if len(expansion) > 50 else '')
+                preview = preview.replace('\n', '\\n')
+                print(f"  '{trigger}' → '{preview}'")
+        else:
+            print("No snippets. Add with: --add-snippet 'trigger' 'expansion text'")
         return
 
     # Load and potentially update settings

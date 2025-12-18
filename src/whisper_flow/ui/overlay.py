@@ -30,12 +30,16 @@ from AppKit import (
 )
 from PyObjCTools import AppHelper
 
+from ..app_context import AppContextManager, get_frontmost_app
 from ..config import Settings, load_settings, get_config_dir
+from ..dictionary import PersonalDictionary
 from ..editor import create_editor
 from ..hotkey import HotkeyHandler
 from ..recorder import AudioRecorder
+from ..snippets import SnippetExpander
 from ..transcriber import Transcriber
 from ..typer import TextTyper
+from ..voice_commands import VoiceCommandProcessor
 
 
 class MicButtonView(NSView):
@@ -170,6 +174,12 @@ class OverlayWindow:
         )
         self.typer = TextTyper()
 
+        # New feature components
+        self.dictionary = PersonalDictionary()
+        self.snippets = SnippetExpander()
+        self.voice_commands = VoiceCommandProcessor()
+        self.app_context = AppContextManager(self.settings.app_context.app_presets)
+
         # State
         self._is_recording = False
         self._is_processing = False
@@ -255,7 +265,16 @@ class OverlayWindow:
         threading.Thread(target=self._process_recording, daemon=True).start()
 
     def _process_recording(self):
-        """Process the recorded audio."""
+        """Process the recorded audio.
+
+        Pipeline:
+        1. Transcribe audio → raw text
+        2. Apply personal dictionary corrections
+        3. Check for voice commands (may exit early)
+        4. AI editing (with app context awareness)
+        5. Snippet expansion
+        6. Type the text at cursor
+        """
         import time as _time
         start_time = _time.time()
 
@@ -266,7 +285,7 @@ class OverlayWindow:
                 print("No audio recorded")
                 return
 
-            # Transcribe
+            # 1. Transcribe
             text = self.transcriber.transcribe(audio_data)
 
             if not text:
@@ -276,16 +295,54 @@ class OverlayWindow:
             raw_text = text
             print(f"Transcribed: {text}")
 
-            # Edit if enabled
+            # 2. Apply personal dictionary corrections
+            if self.settings.dictionary.enabled:
+                text = self.dictionary.apply(text)
+                if text != raw_text:
+                    print(f"Dictionary: {text}")
+
+            # 3. Check for voice commands
+            if self.settings.voice_commands.enabled:
+                command, remaining_text = self.voice_commands.detect_command(text)
+                if command:
+                    print(f"Voice command: {command[0]}")
+                    self.voice_commands.execute_command(command, self.typer)
+                    if not remaining_text:
+                        # Pure command, no text to process
+                        duration = _time.time() - start_time
+                        _log_transcription(raw_text, f"[Command: {command[0]}]", duration)
+                        return
+                    text = remaining_text
+
+            # 4. Get app context for AI editing preset
+            preset = self.settings.ai_editor.preset
+            if self.settings.app_context.enabled:
+                context = self.app_context.get_context()
+                if context["preset"] != "default":
+                    preset = context["preset"]
+                    print(f"App context: {context['name']} → {preset}")
+
+            # 5. AI editing
             if self.settings.ai_editor.enabled:
-                text = self.editor.edit(
-                    text,
-                    preset=self.settings.ai_editor.preset,
-                )
+                text = self.editor.edit(text, preset=preset)
                 print(f"Edited: {text}")
 
-            # Type the text
+            # 6. Snippet expansion
+            if self.settings.snippets.enabled:
+                expanded = self.snippets.expand(text)
+                if expanded != text:
+                    text = expanded
+                    print(f"Snippet: {text[:50]}...")
+
+            # 7. Type the text
             self.typer.type_text(text)
+
+            # Track for "delete that" command
+            self.voice_commands.set_last_typed_length(len(text))
+
+            # Auto-learn from corrections if enabled
+            if self.settings.dictionary.auto_learn and text != raw_text:
+                self.dictionary.learn_from_correction(raw_text, text)
 
             # Log transcription
             duration = _time.time() - start_time
@@ -293,6 +350,8 @@ class OverlayWindow:
 
         except Exception as e:
             print(f"Error: {e}")
+            import traceback
+            traceback.print_exc()
         finally:
             self._is_processing = False
             # Update UI on main thread
