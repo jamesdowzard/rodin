@@ -118,6 +118,10 @@ class MicButtonView(NSView):
         y = (bounds.size.height - icon_size.height) / 2
         ns_icon.drawAtPoint_withAttributes_(NSMakePoint(x, y), attrs)
 
+    def acceptsFirstMouse_(self, event):
+        """Accept clicks even when window is not key."""
+        return True
+
     def mouseDown_(self, event):
         """Handle mouse click."""
         if self._on_click:
@@ -217,6 +221,7 @@ class OverlayWindow:
         self.window.setMovableByWindowBackground_(True)
         self.window.setCollectionBehavior_(1 << 0)  # Can join all spaces
         self.window.setIgnoresMouseEvents_(False)
+        self.window.setAcceptsMouseMovedEvents_(True)
 
         # Create button view
         self.button_view = MicButtonView.alloc().initWithFrame_(
