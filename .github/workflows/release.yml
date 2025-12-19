@@ -126,12 +126,53 @@ jobs:
           # Create a zip for notarization
           ditto -c -k --keepParent dist/Rodin.app Rodin-notarize.zip
 
-          # Submit for notarization
-          xcrun notarytool submit Rodin-notarize.zip \
+          # Submit for notarization and capture submission ID
+          SUBMIT_OUTPUT=$(xcrun notarytool submit Rodin-notarize.zip \
             --apple-id "$APPLE_ID" \
             --password "$APPLE_ID_PWD" \
             --team-id "$APPLE_TEAM_ID" \
-            --wait
+            --output-format json)
+
+          SUBMISSION_ID=$(echo "$SUBMIT_OUTPUT" | python3 -c "import sys, json; print(json.load(sys.stdin)['id'])")
+          echo "Submission ID: $SUBMISSION_ID"
+
+          # Poll for completion with 30 minute timeout
+          MAX_ATTEMPTS=60  # 60 attempts * 30 seconds = 30 minutes
+          ATTEMPT=0
+
+          while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+            ATTEMPT=$((ATTEMPT + 1))
+            echo "Checking status (attempt $ATTEMPT/$MAX_ATTEMPTS)..."
+
+            STATUS_OUTPUT=$(xcrun notarytool info "$SUBMISSION_ID" \
+              --apple-id "$APPLE_ID" \
+              --password "$APPLE_ID_PWD" \
+              --team-id "$APPLE_TEAM_ID" \
+              --output-format json 2>/dev/null || echo '{"status": "Unknown"}')
+
+            STATUS=$(echo "$STATUS_OUTPUT" | python3 -c "import sys, json; print(json.load(sys.stdin).get('status', 'Unknown'))")
+            echo "Status: $STATUS"
+
+            if [ "$STATUS" = "Accepted" ]; then
+              echo "Notarization successful!"
+              break
+            elif [ "$STATUS" = "Invalid" ] || [ "$STATUS" = "Rejected" ]; then
+              echo "Notarization failed with status: $STATUS"
+              xcrun notarytool log "$SUBMISSION_ID" \
+                --apple-id "$APPLE_ID" \
+                --password "$APPLE_ID_PWD" \
+                --team-id "$APPLE_TEAM_ID"
+              exit 1
+            fi
+
+            sleep 30
+          done
+
+          if [ "$STATUS" != "Accepted" ]; then
+            echo "Notarization timed out after 30 minutes. Status: $STATUS"
+            echo "Submission ID: $SUBMISSION_ID (you can check manually later)"
+            exit 1
+          fi
 
           # Staple the notarization ticket
           xcrun stapler staple dist/Rodin.app
